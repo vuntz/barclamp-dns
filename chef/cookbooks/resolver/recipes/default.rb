@@ -18,15 +18,14 @@
 # limitations under the License.
 #
 
-env_filter = " AND dns_config_environment:#{node[:dns][:config][:environment]}"
-nodes = search(:node, "roles:dns-server#{env_filter}")
+dns_settings = CrowbarConfig.fetch("core", "dns")
 
-dns_list = []
-if !nodes.nil? and !nodes.empty?
-  dns_list = nodes.map { |x| Chef::Recipe::Barclamp::Inventory.get_network_by_type(x, "admin").address }
-  dns_list.sort!
-elsif !node["crowbar"].nil? and node["crowbar"]["admin_node"] and !node[:dns][:forwarders].nil?
-  dns_list << node[:dns][:forwarders]
+dns_list = dns_settings["internal_servers"]
+if dns_list.nil?
+  dns_list = []
+  if !node["crowbar"].nil? and node["crowbar"]["admin_node"] and !node[:dns][:forwarders].nil?
+    dns_list << node[:dns][:forwarders]
+  end
 end
 
 dns_list << node[:dns][:nameservers]
